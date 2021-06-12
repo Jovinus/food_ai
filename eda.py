@@ -40,3 +40,17 @@ fig, ax = plt.subplots(figsize=(10, 10))
 sns.boxplot(x='요일', y='본사시간외근무명령서승인건수', data=df_orig_train, ax=ax)
 plt.show()
 # %%
+df_orig_train['조식메뉴'][0]
+# %%
+df_orig_train['중식메뉴'][0]
+# %%
+sample_text = df_orig_train['중식메뉴'][0]
+print(sample_text)
+
+# %%
+sample_text.split('/')
+# %%
+import re
+processed_1 = re.subn(r"[(]\w+[,]*\w*[:]\w+[)]", " ", sample_text)[0]
+re.sub("\s+", " ", processed_1)
+# %%

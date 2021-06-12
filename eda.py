@@ -52,5 +52,6 @@ sample_text.split('/')
 # %%
 import re
 processed_1 = re.subn(r"[(]\w+[,]*\w*[:]\w+[)]", " ", sample_text)[0]
-re.sub("\s+", " ", processed_1)
+results = re.sub("\s+", " ", processed_1)
+print(results)
 # %%

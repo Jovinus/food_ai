@@ -16,7 +16,7 @@ df_orig_test['요일'] = df_orig_test['요일'].map(date_mapper)
 
 # %%
 import re
-predefined_patten = r"[(<]\s*(\w+[,]*)*\w*\s*[:]*\s*[/]*(\w+[,]*)*\s*[:]*\s*(\w+[,]*)*\s*[)>]"
+predefined_patten = r"\s*[(<]\s*(\w+[,]*)*\w*\s*[:]*\s*[/]*(\w+[,]*)*\s*[:]*\s*(\w+[,]*)*\s*[)>]\s*"
 
 df_orig_train['중식메뉴_processed'] = df_orig_train['중식메뉴'].apply(lambda x: re.sub(predefined_patten, " ", x))\
     .apply(lambda x: re.sub("\s+", " ", x))
@@ -46,5 +46,7 @@ df_orig_train = df_orig_train.assign(점심_변동율 = lambda x: (x['중식계'
     .assign(석식_변동율 = lambda x: (x['석식계'] - x['요일_dinner']) / x['식사대상자'])
 
 # %%
-df_orig_train.to_csv('preprocessed_train.csv', index=False)
-df_orig_test.to_csv('preprocessed_test.csv', index=False)
+df_orig_train.to_csv('./preprocessed_data/preprocessed_train.csv', index=False)
+df_orig_test.to_csv('./preprocessed_data/preprocessed_test.csv', index=False)
+
+# %%

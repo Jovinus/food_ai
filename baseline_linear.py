@@ -2,6 +2,12 @@
 
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_absolute_error
+import pandas as pd
+
+# %%
+df_orig_train = pd.read_csv('./preprocessed_data/preprocessed_train.csv')
+df_orig_test = pd.read_csv('./preprocessed_data/preprocessed_test.csv')
+submission = pd.read_csv('./data/sample_submission.csv')
 
 ## 중식예측
 
@@ -24,4 +30,5 @@ submission['중식계'] = lunch_pred
 submission['석식계'] = dinner_pred
 
 submission.to_csv('linear_model_add_feature.csv', index=False)
+# %%
 # %%

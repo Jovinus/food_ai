@@ -51,7 +51,13 @@ print(sample_text)
 sample_text.split('/')
 # %%
 import re
-processed_1 = re.subn(r"[(]\w+[,]*\w*[:]\w+[)]", " ", sample_text)[0]
+processed_1 = re.subn(r"[(<]\s*(\w+[,]*)*\w*\s*[:]*\s*[/]*(\w+[,]*)*\s*[:]*\s*(\w+[,]*)*\s*[)>]", " ", sample_text)[0]
 results = re.sub("\s+", " ", processed_1)
 print(results)
+# %%
+
+df_orig_train[['중식메뉴', '석식메뉴']]
+# %%
+df_orig_train[['중식메뉴']].to_csv('lunch.tsv', index=False, sep='\t')
+df_orig_train[['석식메뉴']].to_csv('dinner.tsv', index=False, sep='\t')
 # %%

@@ -45,8 +45,8 @@ df_orig_train = df_orig_train.assign(점심_변동성 = lambda x: x['중식계']
 df_orig_train = df_orig_train.assign(점심_변동율 = lambda x: (x['중식계'] - x['요일_lunch']) / x['식사대상자'])\
     .assign(석식_변동율 = lambda x: (x['석식계'] - x['요일_dinner']) / x['식사대상자'])
 
+df_orig_train['covid'] = np.where(df_orig_train['현본사소속재택근무자수'] >= 1, 1, 0)
+df_orig_test['covid'] = np.where(df_orig_test['현본사소속재택근무자수'] >= 1, 1, 0)
 # %%
 df_orig_train.to_csv('./preprocessed_data/preprocessed_train.csv', index=False)
 df_orig_test.to_csv('./preprocessed_data/preprocessed_test.csv', index=False)
-
-# %%

@@ -4,42 +4,116 @@ import numpy as np
 pd.set_option("display.max_columns", None)
 
 # %%
-df_train = pd.read_csv("./preprocessed_data/preprocessed_train.csv")
-df_test = pd.read_csv("./preprocessed_data/preprocessed_test.csv")
-submission = pd.read_csv('./data/sample_submission.csv')
+from sklearn.model_selection import train_test_split, ParameterGrid, KFold
+from tqdm import tqdm
 
-# %%
-from sklearn.model_selection import train_test_split
+def grid_search_model(train_data, parameter_candidate, model_class, n_splits, feature_mask, label):
+    
+    results = pd.DataFrame([], columns=['parameter', 'loss'])
+    
+    for parameter in tqdm(ParameterGrid(parameter_candidate), desc='combination'):
+        
+        model = model_class(**parameter)
+        
+        skf = KFold(n_splits=n_splits, shuffle=True, random_state=1004)
+        
+        tmp_results = []
+        tmp_param = []
+        
+        for train_index, test_index in skf.split(train_data[feature_mask], train_data[label]):
+            
+            if label == '석식계':
+                X_train, X_test = train_data.iloc[train_index][feature_mask], train_data.iloc[test_index][feature_mask]
+                y_train, y_test = train_data.iloc[train_index][label], train_data.iloc[test_index][label]
+                X_train, X_test = X_train[y_train != 0], X_test[y_test != 0]
+                y_train, y_test = y_train[y_train != 0], y_test[y_test != 0]
+            else:
+                X_train, X_test = train_data.iloc[train_index][feature_mask], train_data.iloc[test_index][feature_mask]
+                y_train, y_test = train_data.iloc[train_index][label], train_data.iloc[test_index][label]
+            
+            model.fit(X_train, y_train)
+            
+            tmp_results.append(model.score(X_test, y_test))
+            tmp_param.append(str(parameter))
+            
+        results = results.append(pd.DataFrame({"parameter":tmp_param, "loss":tmp_results}))
+    
+    return results
 
-train_set, dev_set = train_test_split(df_train, train_size=0.3)
 # %%
 from sklearn.ensemble import RandomForestRegressor
+from sklearn.linear_model import LinearRegression, ElasticNet
 from sklearn.metrics import mean_absolute_error
 
-rf_model_lunch = RandomForestRegressor(n_jobs=-1, n_estimators=50, random_state=1004)
-
-feature_mask = ['식사대상자', '요일_lunch', '본사시간외근무명령서승인건수']
-
-rf_model_lunch.fit(train_set[feature_mask], train_set['중식계'])
-
-print(mean_absolute_error(rf_model_lunch.predict(train_set[feature_mask]), train_set['중식계']))
-print(mean_absolute_error(rf_model_lunch.predict(dev_set[feature_mask]), dev_set['중식계']))
-
-rf_model_dinner = RandomForestRegressor(n_jobs=-1, n_estimators=50, random_state=1004)
-
-feature_mask = ['식사대상자', '요일_dinner', '본사시간외근무명령서승인건수']
-
-rf_model_dinner.fit(train_set.loc[train_set['석식계'] != 0, feature_mask], train_set.loc[train_set['석식계'] != 0, '석식계'])
-print(mean_absolute_error(rf_model_dinner.predict(train_set.loc[train_set['석식계'] != 0, feature_mask]), train_set.loc[train_set['석식계'] != 0, '중식계']))
-print(mean_absolute_error(rf_model_dinner.predict(dev_set.loc[dev_set['석식계'] != 0, feature_mask]), dev_set.loc[dev_set['석식계'] != 0, '중식계']))
-
+if __name__ == "__main__":
+    
+    df_train = pd.read_csv("./preprocessed_data/preprocessed_train.csv")
+    df_test = pd.read_csv("./preprocessed_data/preprocessed_test.csv")
+    submission = pd.read_csv('./data/sample_submission.csv')
+    
+    feature_mask_lunch = ['식사대상자', '요일_lunch', '본사시간외근무명령서승인건수', 'covid']
+    feature_mask_dinner = ['식사대상자', '요일_dinner', '본사시간외근무명령서승인건수', 'covid']
+    
+    rf_parameters = {'n_jobs':[-1], 
+                    'n_estimators':[10, 50, 100, 150, 200, 250, 300, 350, 400], 
+                    "max_depth":[2, 3, 4, None]}
+    
+    rf_results_lunch = grid_search_model(train_data=df_train, 
+                                        parameter_candidate=rf_parameters, 
+                                        model_class=RandomForestRegressor, 
+                                        n_splits=5, 
+                                        feature_mask=feature_mask_lunch, 
+                                        label='중식계')
+    
+    rf_results_dinner = grid_search_model(train_data=df_train, 
+                                        parameter_candidate=rf_parameters, 
+                                        model_class=RandomForestRegressor, 
+                                        n_splits=5, 
+                                        feature_mask=feature_mask_dinner, 
+                                        label='석식계')
+    
+    linear_parameters = {'fit_intercept':[True, False], 
+                        'normalize':[True, False]}
+    
+    linear_results_lunch = grid_search_model(train_data=df_train, 
+                                        parameter_candidate=linear_parameters, 
+                                        model_class=LinearRegression, 
+                                        n_splits=5, 
+                                        feature_mask=feature_mask_lunch, 
+                                        label='중식계')
+    
+    linear_results_dinner = grid_search_model(train_data=df_train, 
+                                        parameter_candidate=linear_parameters, 
+                                        model_class=LinearRegression, 
+                                        n_splits=5, 
+                                        feature_mask=feature_mask_dinner, 
+                                        label='석식계')
+    
+    elastic_parameters = {'alpha':range(0, 2, 20), 
+                        'l1_ratio':range(0, 1, 10), 
+                        "normalize":[True, False], 
+                        'fit_intercept':[True, False]}
+    
+    elastic_results_lunch = grid_search_model(train_data=df_train, 
+                                        parameter_candidate=elastic_parameters, 
+                                        model_class=ElasticNet, 
+                                        n_splits=5, 
+                                        feature_mask=feature_mask_lunch, 
+                                        label='중식계')
+    
+    elastic_results_dinner = grid_search_model(train_data=df_train, 
+                                        parameter_candidate=elastic_parameters, 
+                                        model_class=ElasticNet, 
+                                        n_splits=5, 
+                                        feature_mask=feature_mask_dinner, 
+                                        label='석식계')
 # %%
 
-lunch_pred = rf_model_lunch.predict(df_test[['식사대상자', '요일_lunch', '본사시간외근무명령서승인건수']])
-dinner_pred = rf_model_dinner.predict(df_test[['식사대상자', '요일_dinner', '본사시간외근무명령서승인건수']])
+rf_results_lunch.groupby(['parameter'])['loss'].apply(np.mean)
+rf_results_dinner.groupby(['parameter'])['loss'].apply(np.mean)
 
-submission['중식계'] = lunch_pred
-submission['석식계'] = dinner_pred
+linear_results_lunch.groupby(['parameter'])['loss'].apply(np.mean)
+linear_results_dinner.groupby(['parameter'])['loss'].apply(np.mean)
 
-submission.to_csv('rf_model_add_feature.csv', index=False)
-# %%
+elastic_results_lunch.groupby(['parameter'])['loss'].apply(np.mean)
+elastic_results_dinner.groupby(['parameter'])['loss'].apply(np.mean)

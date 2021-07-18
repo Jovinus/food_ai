@@ -4,7 +4,7 @@ import numpy as np
 pd.set_option("display.max_columns", None)
 
 # %%
-from sklearn.model_selection import train_test_split, ParameterGrid, KFold
+from sklearn.model_selection import ParameterGrid, KFold
 from tqdm import tqdm
 
 def grid_search_model(train_data, parameter_candidate, model_class, n_splits, feature_mask, label):
@@ -33,7 +33,7 @@ def grid_search_model(train_data, parameter_candidate, model_class, n_splits, fe
             
             model.fit(X_train, y_train)
             
-            tmp_results.append(model.score(X_test, y_test))
+            tmp_results.append(mean_absolute_error(y_pred=model.predict(X_test), y_true=y_test))
             tmp_param.append(str(parameter))
             
         results = results.append(pd.DataFrame({"parameter":tmp_param, "loss":tmp_results}))
@@ -107,13 +107,32 @@ if __name__ == "__main__":
                                         n_splits=5, 
                                         feature_mask=feature_mask_dinner, 
                                         label='석식계')
-# %%
+    
+    rf_lunch_results = rf_results_lunch.groupby(['parameter'])['loss'].apply(np.mean).reset_index(name='loss')
+    rf_lunch_results['type'] = 'lunch'
+    rf_lunch_results['model'] = 'rf'
 
-rf_results_lunch.groupby(['parameter'])['loss'].apply(np.mean)
-rf_results_dinner.groupby(['parameter'])['loss'].apply(np.mean)
+    rf_dinner_results = rf_results_dinner.groupby(['parameter'])['loss'].apply(np.mean).reset_index(name='loss')
+    rf_dinner_results['type'] = 'dinner'
+    rf_dinner_results['model'] = 'rf'
 
-linear_results_lunch.groupby(['parameter'])['loss'].apply(np.mean)
-linear_results_dinner.groupby(['parameter'])['loss'].apply(np.mean)
+    linear_lunch_results = linear_results_lunch.groupby(['parameter'])['loss'].apply(np.mean).reset_index(name='loss')
+    linear_lunch_results['type'] = 'lunch'
+    linear_lunch_results['model'] = 'linear'
 
-elastic_results_lunch.groupby(['parameter'])['loss'].apply(np.mean)
-elastic_results_dinner.groupby(['parameter'])['loss'].apply(np.mean)
+    linear_dinner_results = linear_results_dinner.groupby(['parameter'])['loss'].apply(np.mean).reset_index(name='loss')
+    linear_dinner_results['type'] = 'dinner'
+    linear_dinner_results['model'] = 'linear'
+
+    elastic_lunch_results = elastic_results_lunch.groupby(['parameter'])['loss'].apply(np.mean).reset_index(name='loss')
+    elastic_lunch_results['type'] = 'lunch'
+    elastic_lunch_results['model'] = 'elastic'
+
+    elastic_dinner_results = elastic_results_dinner.groupby(['parameter'])['loss'].apply(np.mean).reset_index(name='loss')
+    elastic_dinner_results['type'] = 'dinner'
+    elastic_dinner_results['model'] = 'elastic'
+
+    results = pd.concat([rf_lunch_results, rf_dinner_results, 
+                        linear_lunch_results, linear_dinner_results, 
+                        elastic_lunch_results, elastic_dinner_results], axis=0)
+    results.to_excel("./result/ml_results.xlsx", index=False)

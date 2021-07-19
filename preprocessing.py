@@ -47,25 +47,25 @@ df_orig_test = df_orig_test.assign(식사대상자 = lambda x: x['본사정원�
 
 # %%
 
-tmp_lunch = df_orig_train.groupby(['Year', 'Month', '요일'])['중식계'].apply(np.median).reset_index(name='month_days_lunch')
-tmp_dinner = df_orig_train.groupby(['Year', 'Month', '요일'])['석식계'].apply(np.median).reset_index(name='month_days_dinner')
+tmp_lunch = df_orig_train.groupby(['Month', '요일'])['중식계'].apply(np.median).reset_index(name='month_days_lunch')
+tmp_dinner = df_orig_train.groupby(['Month', '요일'])['석식계'].apply(np.median).reset_index(name='month_days_dinner')
 
 df_orig_train = pd.merge(df_orig_train, tmp_lunch, how='left', 
-                         left_on=['Year', 'Month', '요일'], 
-                         right_on=['Year', 'Month', '요일'])
+                         left_on=['Month', '요일'], 
+                         right_on=['Month', '요일'])
 
 df_orig_train = pd.merge(df_orig_train, tmp_dinner, how='left', 
-                         left_on=['Year', 'Month', '요일'], 
-                         right_on=['Year', 'Month', '요일'])
+                         left_on=['Month', '요일'], 
+                         right_on=['Month', '요일'])
 
 df_orig_test = pd.merge(df_orig_test, tmp_lunch, how='left', 
-                        left_on=['Year', 'Month', '요일'], 
-                        right_on=['Year', 'Month', '요일'])
+                        left_on=['Month', '요일'], 
+                        right_on=['Month', '요일'])
 
 
 df_orig_test = pd.merge(df_orig_test, tmp_dinner, how='left', 
-                        left_on=['Year', 'Month', '요일'], 
-                        right_on=['Year', 'Month', '요일'])
+                        left_on=['Month', '요일'], 
+                        right_on=['Month', '요일'])
 
 
 df_orig_train['요일_lunch'] = df_orig_train['요일'].map(dict(df_orig_train.groupby(['요일'])['중식계'].apply(np.median)))

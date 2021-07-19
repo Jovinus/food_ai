@@ -31,14 +31,50 @@ df_orig_test['석식메뉴_processed'] = df_orig_test['석식메뉴'].apply(lamb
     .apply(lambda x: re.sub("\s+", " ", x))
 
 # %%
+df_orig_train['일자'] = df_orig_train['일자'].astype('datetime64')
+df_orig_test['일자'] = df_orig_test['일자'].astype('datetime64')
+
+df_orig_train['Year'] = df_orig_train['일자'].dt.year
+df_orig_train['Month'] = df_orig_train['일자'].dt.month
+df_orig_train['Day'] = df_orig_train['일자'].dt.day
+
+df_orig_test['Year'] = df_orig_test['일자'].dt.year
+df_orig_test['Month'] = df_orig_test['일자'].dt.month
+df_orig_test['Day'] = df_orig_test['일자'].dt.day
+
 df_orig_train = df_orig_train.assign(식사대상자 = lambda x: x['본사정원수'] - x['본사휴가자수'] - x['본사출장자수'] - x['현본사소속재택근무자수'])
 df_orig_test = df_orig_test.assign(식사대상자 = lambda x: x['본사정원수'] - x['본사휴가자수'] - x['본사출장자수'] - x['현본사소속재택근무자수'])
+
+# %%
+
+tmp_lunch = df_orig_train.groupby(['Year', 'Month', '요일'])['중식계'].apply(np.median).reset_index(name='month_days_lunch')
+tmp_dinner = df_orig_train.groupby(['Year', 'Month', '요일'])['석식계'].apply(np.median).reset_index(name='month_days_dinner')
+
+df_orig_train = pd.merge(df_orig_train, tmp_lunch, how='left', 
+                         left_on=['Year', 'Month', '요일'], 
+                         right_on=['Year', 'Month', '요일'])
+
+df_orig_train = pd.merge(df_orig_train, tmp_dinner, how='left', 
+                         left_on=['Year', 'Month', '요일'], 
+                         right_on=['Year', 'Month', '요일'])
+
+df_orig_test = pd.merge(df_orig_test, tmp_lunch, how='left', 
+                        left_on=['Year', 'Month', '요일'], 
+                        right_on=['Year', 'Month', '요일'])
+
+
+df_orig_test = pd.merge(df_orig_test, tmp_dinner, how='left', 
+                        left_on=['Year', 'Month', '요일'], 
+                        right_on=['Year', 'Month', '요일'])
+
 
 df_orig_train['요일_lunch'] = df_orig_train['요일'].map(dict(df_orig_train.groupby(['요일'])['중식계'].apply(np.median)))
 df_orig_test['요일_lunch'] = df_orig_test['요일'].map(dict(df_orig_train.groupby(['요일'])['중식계'].apply(np.median)))
 
 df_orig_train['요일_dinner'] = df_orig_train['요일'].map(dict(df_orig_train.groupby(['요일'])['석식계'].apply(np.median)))
 df_orig_test['요일_dinner'] = df_orig_test['요일'].map(dict(df_orig_train.groupby(['요일'])['석식계'].apply(np.median)))
+
+# %%
 
 df_orig_train = df_orig_train.assign(점심_변동성 = lambda x: x['중식계'] - x['요일_lunch'])\
     .assign(석식_변동성 = lambda x: x['석식계'] - x['요일_dinner'])
@@ -50,3 +86,5 @@ df_orig_test['covid'] = np.where(df_orig_test['현본사소속재택근무자수
 # %%
 df_orig_train.to_csv('./preprocessed_data/preprocessed_train.csv', index=False)
 df_orig_test.to_csv('./preprocessed_data/preprocessed_test.csv', index=False)
+
+# %%

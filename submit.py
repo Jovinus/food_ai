@@ -19,6 +19,9 @@ if __name__ == "__main__":
     feature_mask_lunch = ['식사대상자', '요일_lunch', '본사시간외근무명령서승인건수', 'covid']
     feature_mask_dinner = ['식사대상자', '요일_dinner', '본사시간외근무명령서승인건수', 'covid']
     
+    feature_mask_lunch = ['본사정원수', '본사휴가자수', '본사출장자수', '현본사소속재택근무자수', '식사대상자', '요일_lunch', '요일_dinner', '본사시간외근무명령서승인건수', 'covid']
+    feature_mask_dinner = ['본사정원수', '본사휴가자수', '본사출장자수', '현본사소속재택근무자수', '식사대상자', '요일_lunch', '요일_dinner', '본사시간외근무명령서승인건수', 'covid']
+    
     parameter_grid = {'learning_rate':0.01, 
                       'max_depth':3, 
                       'lambda':1, 
